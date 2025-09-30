@@ -1,4 +1,4 @@
-# Spotify Playlist Exporter
+# <div align="center"> Spotify Playlist Exporter </div>
 
 <div align="center">
 

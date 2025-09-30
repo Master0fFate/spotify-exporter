@@ -83,9 +83,9 @@ python spotify_exporter.py
 
 ## Building
 
-### Build Executable with Nuitka
+### Build Executable with Nuitka  (alternatively use pyinstaller)
 
-**Windows:** (alternatively use pyinstaller)
+**Windows:**
 ```batch
 # Install Nuitka
 pip install nuitka

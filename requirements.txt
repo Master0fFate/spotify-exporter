@@ -1,3 +1,4 @@
 PyQt6
 spotipy
 requests
+PyQt6-Fluent-Widgets

@@ -29,6 +29,48 @@ jobs:
       - name: Build and smoke-test the actual Windows executable
         shell: pwsh
         run: ./scripts/build_windows.ps1
+      - name: Prepare bounded transfer parts and source manifest
+        id: split
+        shell: python
+        run: |
+          import hashlib
+          import json
+          import os
+          import shutil
+          from pathlib import Path
+
+          source = Path("dist/SpotifyExporter.exe")
+          part_size = 20 * 1024 * 1024
+          if source.stat().st_size > part_size * 4:
+              raise RuntimeError("Executable exceeds the four-part transfer budget")
+          parts = []
+          with source.open("rb") as stream:
+              while chunk := stream.read(part_size):
+                  number = len(parts) + 1
+                  folder = Path(f"dist/transfer/part{number:02d}")
+                  folder.mkdir(parents=True, exist_ok=True)
+                  filename = f"SpotifyExporter.exe.part{number:02d}"
+                  (folder / filename).write_bytes(chunk)
+                  parts.append({"filename": filename, "size": len(chunk),
+                                "sha256": hashlib.sha256(chunk).hexdigest()})
+          digest = hashlib.sha256(source.read_bytes()).hexdigest()
+          expected = Path("dist/SHA256SUMS.txt").read_text().split()[0]
+          if digest != expected:
+              raise RuntimeError("Executable changed after its smoke test")
+          manifest = {"filename": source.name, "size": source.stat().st_size,
+                      "sha256": digest, "source_sha": os.environ["GITHUB_SHA"],
+                      "run_id": os.environ["GITHUB_RUN_ID"],
+                      "run_attempt": os.environ["GITHUB_RUN_ATTEMPT"],
+                      "architecture": "Windows x64", "parts": parts}
+          Path("dist/transfer-manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+          for number in range(1, len(parts) + 1):
+              folder = Path(f"dist/transfer/part{number:02d}")
+              for filename in ("transfer-manifest.json", "SHA256SUMS.txt",
+                               "smoke-report.json", "build-dependencies.txt"):
+                  shutil.copyfile(Path("dist") / filename, folder / filename)
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+              output.write(f"part_count={len(parts)}\n")
+          print(json.dumps(manifest, indent=2))
       - uses: actions/upload-artifact@v4
         with:
           name: SpotifyExporter-windows-x64
@@ -37,5 +79,38 @@ jobs:
             dist/SHA256SUMS.txt
             dist/smoke-report.json
             dist/build-dependencies.txt
+            dist/transfer-manifest.json
+          if-no-files-found: error
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        if: ${{ fromJSON(steps.split.outputs.part_count) >= 1 }}
+        with:
+          name: SpotifyExporter-windows-x64-part-01
+          path: dist/transfer/part01/*
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        if: ${{ fromJSON(steps.split.outputs.part_count) >= 2 }}
+        with:
+          name: SpotifyExporter-windows-x64-part-02
+          path: dist/transfer/part02/*
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        if: ${{ fromJSON(steps.split.outputs.part_count) >= 3 }}
+        with:
+          name: SpotifyExporter-windows-x64-part-03
+          path: dist/transfer/part03/*
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        if: ${{ fromJSON(steps.split.outputs.part_count) >= 4 }}
+        with:
+          name: SpotifyExporter-windows-x64-part-04
+          path: dist/transfer/part04/*
+          compression-level: 0
           if-no-files-found: error
           retention-days: 30

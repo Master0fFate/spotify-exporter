@@ -1,8 +1,5 @@
 $ErrorActionPreference = 'Stop'
-python -m PyInstaller --noconfirm --clean --onefile --windowed --noupx `
-  --name SpotifyExporter --icon icon.ico `
-  --collect-all qfluentwidgets --collect-all qframelesswindow `
-  --copy-metadata PyQt6-Fluent-Widgets spotify_exporter.py
+python -m PyInstaller --noconfirm --clean packaging/SpotifyExporter.spec
 if ($LASTEXITCODE -ne 0) { throw 'Executable build failed' }
 $exe = Join-Path (Resolve-Path dist) 'SpotifyExporter.exe'
 # The windowed application reports via JSON because it has no console streams.

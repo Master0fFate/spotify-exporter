@@ -142,7 +142,7 @@ tests/                  Offline regression tests
 ### Windows release executable
 
 The release asset remains **`SpotifyExporter.exe`**, now built as a Windows x64
-single-file PyInstaller application with Python 3.12. It includes Python and Qt;
+single-file PyInstaller application with Python 3.14. It includes Python and Qt;
 no separate Python installation is required. The executable is unsigned. Windows
 may display an unknown-publisher or reputation warning; verify the published
 SHA-256 and download only from this repository's Releases. No macOS, Linux,
@@ -154,7 +154,10 @@ EXE, then **runs that exact EXE** in offscreen mode to verify Qt/plugin loading,
 login/settings/main rendering, background playlist loading and all four local
 export formats. Network and browser access are blocked inside smoke mode.
 `SpotifyExporter-windows-x64` contains the EXE, `SHA256SUMS.txt`, the JSON smoke
-report and the resolved build dependencies. The workflow does not publish Releases.
+report and the resolved build dependencies. The workflow does not publish Releases. Optional Qt Multimedia/PDF/FFmpeg components
+are excluded from the package; CI inspects the final archive to verify their absence.
+A separate ThirdPartyNotices artifact records exact installed license texts and
+provenance. It is a review inventory, not a claim of complete GPL/LGPL compliance.
 
 To reproduce on Windows x64:
 

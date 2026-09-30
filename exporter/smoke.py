@@ -5,12 +5,13 @@ import platform
 import tempfile
 from pathlib import Path
 from threading import Event
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from PyQt6.QtCore import QEventLoop, QSettings, QTimer
 
 from . import __version__
-from .formats import write_export
+from .formats import send_discord, write_export
 from .models import Track
 
 
@@ -90,6 +91,21 @@ def run_smoke_test(app, report_path):
                     != track.name
                 ):
                     raise RuntimeError("Unicode export round-trip failed")
+                deliveries = []
+
+                def offline_post(url, **kwargs):
+                    deliveries.append(kwargs)
+                    return SimpleNamespace(status_code=204)
+
+                send_discord(
+                    main.playlists[0],
+                    [track],
+                    "https://discord.com/api/webhooks/123/offline_smoke",
+                    Event(),
+                    post=offline_post,
+                )
+                if deliveries[0]["json"]["allowed_mentions"] != {"parse": []}:
+                    raise RuntimeError("Offline Discord payload validation failed")
                 report.update(
                     status="passed",
                     checks=[
@@ -98,6 +114,7 @@ def run_smoke_test(app, report_path):
                         "background playlist loading",
                         "CSV/JSON/TXT/Markdown writes",
                         "Unicode JSON round-trip",
+                        "offline Discord payload validation",
                     ],
                     export_formats=4,
                 )

@@ -8,6 +8,8 @@ on:
       - pyproject.toml
       - icon.ico
       - scripts/build_windows.ps1
+      - scripts/collect_release_notices.py
+      - packaging/**
       - .github/workflows/windows-package.yml
   workflow_dispatch:
 permissions:
@@ -22,13 +24,21 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: '3.14'
           architecture: x64
       - run: python -m pip install '.[dev]' 'pyinstaller==6.22.3'
       - run: python -m pytest -q
       - name: Build and smoke-test the actual Windows executable
         shell: pwsh
         run: ./scripts/build_windows.ps1
+      - name: Inventory bundled files and collect exact installed notices
+        run: python scripts/collect_release_notices.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SpotifyExporter-ThirdPartyNotices
+          path: dist/SpotifyExporter-ThirdPartyNotices.zip
+          if-no-files-found: error
+          retention-days: 30
       - name: Prepare bounded transfer parts and source manifest
         id: split
         shell: python

@@ -2,6 +2,7 @@
 An advanced application for exporting Spotify playlists
 """
 
+import argparse
 import configparser
 import logging
 import re
@@ -1198,10 +1199,23 @@ class MainWindow(QMainWindow):
 
 
 # ==================== Main Application ====================
-def main():
-    """Main application entry point"""
+def main(argv=None):
+    """Main application entry point, with a credential-free package smoke mode."""
+    parser = argparse.ArgumentParser(
+        description="Export Spotify playlist metadata from the desktop."
+    )
+    parser.add_argument("--version", action="version", version=Constants.APP_VERSION)
+    parser.add_argument(
+        "--smoke-test", action="store_true", help="Run offline UI/export checks without login"
+    )
+    parser.add_argument("--smoke-report", help="Write the offline smoke result to this JSON file")
+    args = parser.parse_args(argv)
+    if args.smoke_test and not args.smoke_report:
+        parser.error("--smoke-test requires --smoke-report PATH")
+    if args.smoke_report and not args.smoke_test:
+        parser.error("--smoke-report requires --smoke-test")
     protect_transport_logs()
-    app = QApplication(sys.argv)
+    app = QApplication([sys.argv[0]])
     app.setApplicationName(Constants.APP_NAME)
     app.setApplicationVersion(Constants.APP_VERSION)
     app.setFont(QFont("Segoe UI", 10))
@@ -1209,6 +1223,11 @@ def main():
     # Set Fluent Theme to Dark and Accent Color to Spotify Green
     setTheme(Theme.DARK)
     setThemeColor(Constants.PRIMARY)
+
+    if args.smoke_test:
+        from exporter.smoke import run_smoke_test
+
+        sys.exit(run_smoke_test(app, args.smoke_report))
 
     # Keep references for the entire application lifetime.
     windows = {}

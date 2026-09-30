@@ -139,15 +139,43 @@ exporter/workers.py       Qt background adapters
 tests/                  Offline regression tests
 ```
 
-### Build a desktop executable
+### Windows release executable
 
-The installable wheel is tested separately from native application bundling.
-For a local Windows build with Nuitka (not exercised by CI):
+The release asset remains **`SpotifyExporter.exe`**, now built as a Windows x64
+single-file PyInstaller application with Python 3.12. It includes Python and Qt;
+no separate Python installation is required. The executable is unsigned. Windows
+may display an unknown-publisher or reputation warning; verify the published
+SHA-256 and download only from this repository's Releases. No macOS, Linux,
+Windows ARM64 or 32-bit executable is included.
 
-```sh
-python -m pip install nuitka
-python -m nuitka --standalone --onefile --enable-plugin=pyqt6 --windows-console-mode=disable --output-filename=SpotifyExporter.exe spotify_exporter.py
+`Package Windows executable` builds on pushes to main that affect application or
+packaging code (or on manual dispatch). It runs the offline test suite, builds the
+EXE, then **runs that exact EXE** in offscreen mode to verify Qt/plugin loading,
+login/settings/main rendering, background playlist loading and all four local
+export formats. Network and browser access are blocked inside smoke mode.
+`SpotifyExporter-windows-x64` contains the EXE, `SHA256SUMS.txt`, the JSON smoke
+report and the resolved build dependencies. The workflow does not publish Releases.
+
+To reproduce on Windows x64:
+
+```powershell
+python -m pip install '.[dev]' 'pyinstaller==6.22.3'
+./scripts/build_windows.ps1
 ```
+
+For a credential-free check of the downloaded executable:
+
+```powershell
+$env:QT_QPA_PLATFORM = 'offscreen'
+Start-Process .\SpotifyExporter.exe -ArgumentList '--smoke-test --smoke-report smoke-report.json' -Wait
+Get-Content smoke-report.json
+```
+
+Normal launch still opens the desktop login window. Smoke mode never connects to
+Spotify, starts OAuth, or posts to Discord. Live authorization, real account exports
+and desktop integration remain manual checks; a passing package smoke is not a
+claim that those live flows were tested. The one-file executable extracts bundled
+libraries to the user's temporary directory at startup. UPX compression is disabled.
 
 ## Troubleshooting
 

@@ -1,0 +1,41 @@
+name: Package Windows executable
+on:
+  push:
+    branches: [main]
+    paths:
+      - '*.py'
+      - exporter/**
+      - pyproject.toml
+      - icon.ico
+      - scripts/build_windows.ps1
+      - .github/workflows/windows-package.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    env:
+      QT_QPA_PLATFORM: offscreen
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          architecture: x64
+      - run: python -m pip install '.[dev]' 'pyinstaller==6.22.3'
+      - run: python -m pytest -q
+      - name: Build and smoke-test the actual Windows executable
+        shell: pwsh
+        run: ./scripts/build_windows.ps1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SpotifyExporter-windows-x64
+          path: |
+            dist/SpotifyExporter.exe
+            dist/SHA256SUMS.txt
+            dist/smoke-report.json
+            dist/build-dependencies.txt
+          if-no-files-found: error
+          retention-days: 30

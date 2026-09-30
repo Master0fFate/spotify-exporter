@@ -205,3 +205,9 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Local authentication material from older versions; never commit these.
+config.ini
+.cache*
+logs/
+*.tmp

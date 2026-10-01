@@ -8,7 +8,7 @@ from threading import Event
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from PyQt6.QtCore import QEventLoop, QSettings, QTimer
+from PyQt6.QtCore import QCoreApplication, QEvent, QEventLoop, QSettings, QTimer
 
 from . import __version__
 from .formats import send_discord, write_export
@@ -106,6 +106,11 @@ def run_smoke_test(app, report_path):
                 )
                 if deliveries[0]["json"]["allowed_mentions"] != {"parse": []}:
                     raise RuntimeError("Offline Discord payload validation failed")
+                # Exercise QApplication.exec()/normal last-window-close exit too,
+                # rather than testing only widget construction in a nested loop.
+                QTimer.singleShot(0, lambda: [window.close() for window in windows])
+                if app.exec() != 0:
+                    raise RuntimeError("Application event loop did not exit cleanly")
                 report.update(
                     status="passed",
                     checks=[
@@ -115,6 +120,7 @@ def run_smoke_test(app, report_path):
                         "CSV/JSON/TXT/Markdown writes",
                         "Unicode JSON round-trip",
                         "offline Discord payload validation",
+                        "normal QApplication event-loop exit",
                     ],
                     export_formats=4,
                 )
@@ -128,6 +134,8 @@ def run_smoke_test(app, report_path):
                 worker.cancel()
                 worker.wait(1000)
             window.close()
+            window.deleteLater()
+        QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
         app.processEvents()
         Path(report_path).write_text(json.dumps(report, indent=2), encoding="utf-8")
     return 0 if report["status"] == "passed" else 1

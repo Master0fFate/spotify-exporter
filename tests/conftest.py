@@ -3,8 +3,11 @@ import os
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 import pytest
-from PyQt6.QtCore import QSettings
+from PyQt6.QtCore import QCoreApplication, QEvent, QSettings
 from PyQt6.QtWidgets import QApplication
+
+# Keep QApplication alive until interpreter shutdown, after all widget wrappers.
+_APP = None
 
 
 @pytest.fixture(scope="session")
@@ -15,8 +18,14 @@ def app(tmp_path_factory):
         QSettings.Scope.UserScope,
         str(tmp_path_factory.mktemp("settings")),
     )
-    instance = QApplication.instance() or QApplication([])
-    yield instance
+    global _APP
+    _APP = QApplication.instance() or QApplication([])
+    yield _APP
+    for widget in _APP.topLevelWidgets():
+        widget.close()
+        widget.deleteLater()
+    QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
+    _APP.processEvents()
 
 
 @pytest.fixture(autouse=True)

@@ -76,7 +76,7 @@ jobs:
           for number in range(1, len(parts) + 1):
               folder = Path(f"dist/transfer/part{number:02d}")
               for filename in ("transfer-manifest.json", "SHA256SUMS.txt",
-                               "smoke-report.json", "build-dependencies.txt"):
+                               "smoke-report.json", "native-smoke-report.json", "build-dependencies.txt"):
                   shutil.copyfile(Path("dist") / filename, folder / filename)
           with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
               output.write(f"part_count={len(parts)}\n")
@@ -88,6 +88,7 @@ jobs:
             dist/SpotifyExporter.exe
             dist/SHA256SUMS.txt
             dist/smoke-report.json
+            dist/native-smoke-report.json
             dist/build-dependencies.txt
             dist/transfer-manifest.json
           if-no-files-found: error

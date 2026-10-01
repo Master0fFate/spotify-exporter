@@ -16,6 +16,21 @@ if ($result.status -ne 'passed' -or $result.network -ne 'blocked' -or $result.ex
   throw 'Packaged executable smoke report failed validation'
 }
 Get-Content $report
+# Exercise actual Win32 window handles and native events as well as offscreen rendering.
+$env:QT_QPA_PLATFORM = 'windows'
+$nativeReport = Join-Path (Resolve-Path dist) 'native-smoke-report.json'
+$native = Start-Process -FilePath $exe -ArgumentList @('--smoke-test', '--smoke-report', "`"$nativeReport`"") -PassThru
+if (-not $native.WaitForExit(90000)) {
+  & taskkill /PID $native.Id /T /F
+  throw 'Native Windows smoke test timed out'
+}
+if ($native.ExitCode -ne 0) { throw "Native Windows smoke exited with $($native.ExitCode)" }
+$nativeResult = Get-Content $nativeReport -Raw | ConvertFrom-Json
+if ($nativeResult.status -ne 'passed' -or $nativeResult.network -ne 'blocked' -or $nativeResult.qt_platform -ne 'windows') {
+  throw 'Native Windows smoke report failed validation'
+}
+Get-Content $nativeReport
+$env:QT_QPA_PLATFORM = 'offscreen'
 $hash = (Get-FileHash $exe -Algorithm SHA256).Hash.ToLowerInvariant()
 "$hash  SpotifyExporter.exe" | Set-Content -Encoding ascii dist/SHA256SUMS.txt
 python -m pip freeze | Set-Content -Encoding utf8 dist/build-dependencies.txt

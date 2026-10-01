@@ -15,8 +15,10 @@ a = Analysis(
     + copy_metadata('PyQt6-Fluent-Widgets'),
     hiddenimports=hidden,
     excludes=['qfluentwidgets.multimedia', 'PyQt6.QtMultimedia',
-              'PyQt6.QtMultimediaWidgets', 'PyQt6.QtPdf', 'PyQt6.QtPdfWidgets'],
+              'PyQt6.QtMultimediaWidgets', 'PyQt6.QtPdf', 'PyQt6.QtPdfWidgets',
+              'win32ui', 'pywin', 'pythonwin'],
 )
+# Pythonwin's optional COM browser pulls in MFC, but none of our window paths use it.
 # QtGui's general image-format hook otherwise adds qpdf.dll and Qt6Pdf.dll,
 # even though no application feature consumes PDFs. PNG/JPEG/SVG/ICO remain.
 excluded_pdf_binaries = {'qpdf.dll', 'qt6pdf.dll', 'qt6pdfwidgets.dll'}

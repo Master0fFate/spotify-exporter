@@ -23,8 +23,8 @@ import importlib.abc
 import sys
 class BlockOptionalQt(importlib.abc.MetaPathFinder):
     def find_spec(self, fullname, path=None, target=None):
-        if fullname.startswith(('qfluentwidgets.multimedia', 'PyQt6.QtMultimedia', 'PyQt6.QtPdf')):
-            raise ModuleNotFoundError('Optional media/PDF stack deliberately unavailable')
+        if fullname.startswith(('qfluentwidgets.multimedia', 'PyQt6.QtMultimedia', 'PyQt6.QtPdf', 'win32ui', 'pywin', 'pythonwin')):
+            raise ModuleNotFoundError('Optional media/PDF/Pythonwin stack deliberately unavailable')
 sys.meta_path.insert(0, BlockOptionalQt())
 import spotify_exporter
 spotify_exporter.main(['--smoke-test', '--smoke-report', sys.argv[1]])

@@ -40,6 +40,7 @@ def run_smoke_test(app, report_path):
         "platform": platform.platform(),
         "architecture": platform.machine(),
         "python": platform.python_version(),
+        "qt_platform": app.platformName(),
         "status": "failed",
         "network": "blocked",
     }

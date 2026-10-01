@@ -63,9 +63,12 @@ for name in names:
             "avutil-",
             "swresample-",
             "swscale-",
+            "win32ui",
+            "pythonwin",
+            "mfc140",
         )
     ):
-        raise RuntimeError(f"Unused native media/PDF dependency still bundled: {name}")
+        raise RuntimeError(f"Unused native dependency still bundled: {name}")
 (root / "bundled-file-inventory.txt").write_text("\n".join(names), encoding="utf-8")
 (root / "installed-distribution-inventory.json").write_text(
     json.dumps(records, indent=2), encoding="utf-8"
@@ -96,7 +99,8 @@ PyQt6, QFluentWidgets and FramelessWindow have GPL terms; bundled Qt has LGPL te
 The executable is NOT represented as MIT-only. These notices do not by themselves
 satisfy all corresponding-source, Qt third-party-code or relinking obligations.
 No new license grant, source-availability promise or commercial license is asserted.
-The release owner must decide and fulfill the applicable redistribution requirements.
+The GPL binary release must also include its corresponding-source and full native-notice
+companion assets. This automated inventory is only one input to that release package.
 
 Build/reproduction: repository commit in build-provenance.json, packaging/SpotifyExporter.spec,
 scripts/build_windows.ps1 and .github/workflows/windows-package.yml.

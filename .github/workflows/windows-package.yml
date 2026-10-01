@@ -5,6 +5,7 @@ on:
     paths:
       - '*.py'
       - exporter/**
+      - tests/**
       - pyproject.toml
       - icon.ico
       - scripts/build_windows.ps1

@@ -66,6 +66,8 @@ for name in names:
             "win32ui",
             "pythonwin",
             "mfc140",
+            "opengl32sw",
+            "qt6opengl",
         )
     ):
         raise RuntimeError(f"Unused native dependency still bundled: {name}")

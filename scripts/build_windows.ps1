@@ -17,6 +17,8 @@ if ($result.status -ne 'passed' -or $result.network -ne 'blocked' -or $result.ex
 }
 Get-Content $report
 # Exercise actual Win32 window handles and native events as well as offscreen rendering.
+# Even with software OpenGL requested, raster widgets need no Mesa renderer.
+$env:QT_OPENGL = 'software'
 $env:QT_QPA_PLATFORM = 'windows'
 $nativeReport = Join-Path (Resolve-Path dist) 'native-smoke-report.json'
 $native = Start-Process -FilePath $exe -ArgumentList @('--smoke-test', '--smoke-report', "`"$nativeReport`"") -PassThru

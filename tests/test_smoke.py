@@ -23,7 +23,9 @@ import importlib.abc
 import sys
 class BlockOptionalQt(importlib.abc.MetaPathFinder):
     def find_spec(self, fullname, path=None, target=None):
-        if fullname.startswith(('qfluentwidgets.multimedia', 'PyQt6.QtMultimedia', 'PyQt6.QtPdf', 'win32ui', 'pywin', 'pythonwin')):
+        forbidden = ('qfluentwidgets.multimedia', 'PyQt6.QtMultimedia', 'PyQt6.QtMultimediaWidgets',
+                     'PyQt6.QtPdf', 'PyQt6.QtPdfWidgets', 'win32ui', 'pywin', 'pythonwin')
+        if any(fullname == name or fullname.startswith(name + '.') for name in forbidden):
             raise ModuleNotFoundError('Optional media/PDF/Pythonwin stack deliberately unavailable')
 sys.meta_path.insert(0, BlockOptionalQt())
 import spotify_exporter
